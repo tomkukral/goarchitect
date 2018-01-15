@@ -21,6 +21,7 @@ setup(
     url='https://github.com/cznewt/architect-client/',
     packages=find_packages(),
     install_requires=[
+        'yaml',
         'requests',
         'Click',
     ],
@@ -35,9 +36,9 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'architect_ansible = architect_client.cli:adapter_ansible',
-            'architect_salt_pillar = architect_client.cli:adapter_salt_pillar',
-            'architect_salt_top = architect_client.cli:adapter_salt_top',
+            'architect-ansible-inventory = architect_client.cli:adapter_ansible_inventory',
+            'architect-salt-pillar = architect_client.cli:adapter_salt_pillar',
+            'architect-salt-top = architect_client.cli:adapter_salt_top',
         ],
     },
 )
