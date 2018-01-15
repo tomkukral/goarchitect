@@ -36,11 +36,11 @@ to your Salt master.
        ext_nodes: architect-salt-top
 
 
-SaltStack Integration
----------------------
+Ansible Integration
+-------------------
 
 To setup architect as Ansible dynamic inventory source, set following
-configuration to your Ansible control.
+configuration to your Ansible control node.
 
 .. code-block:: bash
 
