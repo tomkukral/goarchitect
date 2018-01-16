@@ -20,9 +20,14 @@ func readConfig() (string, string) {
 }
 
 func main() {
-	var url, inv string
+	var apiUrl, inv string
 
-	url, inv = readConfig()
+	apiUrl, inv = readConfig()
 
-	fmt.Println(url, inv)
+	url := fmt.Sprintf(
+		"%s/inventory/v1/%s/data.json?source=%s",
+		apiUrl, inv, "hovno",
+	)
+
+	fmt.Println(url)
 }
