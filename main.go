@@ -1,4 +1,4 @@
-package main
+package architect_client
 
 import (
 	"flag"
@@ -44,15 +44,24 @@ func getUrl(apiUrl, inv, resourceName string) string {
 	// resource names: ansible-inventory, salt-pillar, salt-top
 }
 
-func main() {
-	var apiUrl, inv, resourceName string
+type Client struct {
+	apiURL    string
+	inventory string
+}
 
-	apiUrl, inv = config()
-	resourceName = args()
-	url := getUrl(apiUrl, inv, resourceName)
+func (c *Client) Configure() {
+	apiURL, inv := config()
 
+	c.apiURL = apiURL
+	c.inventory = inv
+}
+
+func (c Client) readResource(resourceName string) string {
+	// calculcate URL
+	url := getUrl(c.apiURL, c.inventory, resourceName)
+
+	// prepare request
 	client := &http.Client{}
-
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -60,17 +69,24 @@ func main() {
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 
+	// send request
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// read response
 	body, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("%s\n", body)
+	return fmt.Sprintf("%s\n", body)
 
+}
+
+func (c Client) Resource(resourceName string) {
+	r := c.readResource(resourceName)
+	fmt.Printf("%s", r)
 }
