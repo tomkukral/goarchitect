@@ -1,0 +1,19 @@
+builds:
+  - binary: ansible-inventory
+    main: ansible-inventory/main.go
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - binary: salt-top
+    main: ansible-inventory/main.go
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - binary: salt-pillar
+    main: ansible-inventory/main.go
+    goos:
+      - linux
+    goarch:
+      - amd64
