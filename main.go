@@ -1,6 +1,7 @@
 package architect_client
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -33,7 +34,7 @@ func config(o osInterface) (string, string) {
 	return url, inv
 }
 
-func args() string {
+func resourceNameArg() string {
 	flag.Parse()
 
 	if len(flag.Args()) < 1 {
@@ -60,7 +61,6 @@ type Client struct {
 
 func (c *Client) Configure(o osInterface) {
 	if c.osInterface == nil {
-		fmt.Println("Using default os interface")
 		o = RealOs{}
 	}
 
@@ -71,7 +71,7 @@ func (c *Client) Configure(o osInterface) {
 
 }
 
-func (c *Client) readResource(resourceName string) string {
+func (c *Client) ReadResource(resourceName string) []byte {
 	// calculcate URL
 	url := getUrl(c.apiURL, c.inventory, resourceName)
 
@@ -97,11 +97,48 @@ func (c *Client) readResource(resourceName string) string {
 		log.Fatal(err)
 	}
 
-	return fmt.Sprintf("%s\n", body)
+	return body
+
+}
+
+func keyInMap(m map[string]*json.RawMessage, key string) bool {
+	if _, ok := m[key]; ok {
+		return true
+	}
+
+	return false
+}
+
+func (c *Client) Output(command string) {
+
+	resourceName := resourceNameArg()
+	data := c.ReadResource(resourceName)
+
+	var jsonRoot map[string]*json.RawMessage
+	err := json.Unmarshal(data, &jsonRoot)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !keyInMap(jsonRoot, resourceName) {
+		log.Fatalf("Host %s is missing in server reponse", resourceName)
+	}
+
+	var hostRoot map[string]*json.RawMessage
+	err = json.Unmarshal(*jsonRoot[resourceName], &hostRoot)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if val, ok := hostRoot["parameters"]; ok {
+		fmt.Printf("%s\n", *val)
+	} else {
+		fmt.Println("{}")
+	}
 
 }
 
 func (c *Client) Resource(resourceName string) {
-	r := c.readResource(resourceName)
+	r := c.ReadResource(resourceName)
 	fmt.Printf("%s", r)
 }

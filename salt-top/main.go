@@ -3,9 +3,9 @@ package main
 import architect "github.com/tomkukral/architect_client"
 
 func main() {
-	res := "ansible-inventory"
+	cmd := "salt-top"
 
 	c := architect.Client{}
 	c.Configure(nil)
-	c.Resource(res)
+	c.Output(cmd)
 }
