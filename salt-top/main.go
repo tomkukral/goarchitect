@@ -6,6 +6,6 @@ func main() {
 	res := "ansible-inventory"
 
 	c := architect.Client{}
-	c.Configure()
+	c.Configure(nil)
 	c.Resource(res)
 }

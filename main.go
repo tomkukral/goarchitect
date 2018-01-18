@@ -9,13 +9,23 @@ import (
 	"os"
 )
 
-func config() (string, string) {
-	url := os.Getenv("ARCHITECT_INVENTORY_API_URL")
+type osInterface interface {
+	Getenv(name string) string
+}
+
+type RealOs struct{}
+
+func (o RealOs) Getenv(name string) string {
+	return os.Getenv(name)
+}
+
+func config(o osInterface) (string, string) {
+	url := o.Getenv("ARCHITECT_INVENTORY_API_URL")
 	if url == "" {
 		url = "https://localhost:8181"
 	}
 
-	inv := os.Getenv("ARCHITECT_INVENTORY_NAME")
+	inv := o.Getenv("ARCHITECT_INVENTORY_NAME")
 	if inv == "" {
 		inv = "default"
 	}
@@ -34,8 +44,6 @@ func args() string {
 }
 
 func getUrl(apiUrl, inv, resourceName string) string {
-	return "https://api.chucknorris.io/jokes/random"
-
 	return fmt.Sprintf(
 		"%s/inventory/v1/%s/%s/data.json?source=%s",
 		apiUrl, inv, resourceName, "salt-pillar",
@@ -45,18 +53,25 @@ func getUrl(apiUrl, inv, resourceName string) string {
 }
 
 type Client struct {
-	apiURL    string
-	inventory string
+	apiURL      string
+	inventory   string
+	osInterface osInterface
 }
 
-func (c *Client) Configure() {
-	apiURL, inv := config()
+func (c *Client) Configure(o osInterface) {
+	if c.osInterface == nil {
+		fmt.Println("Using default os interface")
+		o = RealOs{}
+	}
+
+	apiURL, inv := config(o)
 
 	c.apiURL = apiURL
 	c.inventory = inv
+
 }
 
-func (c Client) readResource(resourceName string) string {
+func (c *Client) readResource(resourceName string) string {
 	// calculcate URL
 	url := getUrl(c.apiURL, c.inventory, resourceName)
 
@@ -86,7 +101,7 @@ func (c Client) readResource(resourceName string) string {
 
 }
 
-func (c Client) Resource(resourceName string) {
+func (c *Client) Resource(resourceName string) {
 	r := c.readResource(resourceName)
 	fmt.Printf("%s", r)
 }
