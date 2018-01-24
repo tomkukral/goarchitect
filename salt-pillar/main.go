@@ -1,7 +1,7 @@
 package main
 
 import (
-	architect "github.com/tomkukral/architect_client"
+	architect "github.com/cznewt/goarchitect"
 )
 
 func main() {
