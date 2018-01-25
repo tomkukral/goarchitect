@@ -10,38 +10,69 @@ import (
 	"os"
 )
 
+const env_url string = "ARCHITECT_INVENTORY_API_URL"
+const env_inv string = "ARCHITECT_INVENTORY_NAME"
+const defaultUrl string = "https://localhost:8181"
+const defaultInv string = "default"
+
 type osInterface interface {
 	Getenv(name string) string
+	FlagParse()
+	FlagArgs() []string
+	FlagArg(pos int) string
+	LogFatal(v ...interface{})
+	HttpDo(req *http.Request) (*http.Response, error)
 }
 
-type RealOs struct{}
+type RealOs struct {
+}
 
 func (o RealOs) Getenv(name string) string {
 	return os.Getenv(name)
 }
+func (o RealOs) FlagParse() {
+	flag.Parse()
+}
+func (o RealOs) FlagArgs() []string {
+	return flag.Args()
+}
+
+func (o RealOs) FlagArg(pos int) string {
+	return flag.Arg(pos)
+}
+
+func (o RealOs) LogFatal(v ...interface{}) {
+	log.Fatal(v)
+}
+
+func (o RealOs) HttpDo(req *http.Request) (*http.Response, error) {
+	client := &http.Client{}
+
+	return client.Do(req)
+}
 
 func config(o osInterface) (string, string) {
-	url := o.Getenv("ARCHITECT_INVENTORY_API_URL")
+	url := o.Getenv(env_url)
 	if url == "" {
-		url = "https://localhost:8181"
+		url = defaultUrl
 	}
 
-	inv := o.Getenv("ARCHITECT_INVENTORY_NAME")
+	inv := o.Getenv(env_inv)
 	if inv == "" {
-		inv = "default"
+		inv = defaultInv
 	}
 
 	return url, inv
 }
 
-func resourceNameArg() string {
-	flag.Parse()
+func resourceNameArg(o osInterface) string {
+	o.FlagParse()
 
-	if len(flag.Args()) < 1 {
-		log.Fatal("Missing resource name parameter")
+	if len(o.FlagArgs()) < 1 {
+		o.LogFatal("Missing resource name parameter")
 	}
 
-	return flag.Arg(0)
+	return o.FlagArg(0)
 }
 
 func getUrl(apiUrl, inv, resourceName string) string {
@@ -53,22 +84,32 @@ func getUrl(apiUrl, inv, resourceName string) string {
 	// resource names: ansible-inventory, salt-pillar, salt-top
 }
 
+func RunCmd(cmd string, o osInterface) {
+	c := Client{osInterface: o}
+	c.Configure()
+	c.Output(cmd)
+}
+
 type Client struct {
 	apiURL      string
 	inventory   string
 	osInterface osInterface
 }
 
-func (c *Client) Configure(o osInterface) {
+func (c *Client) ensureInterface() {
 	if c.osInterface == nil {
-		o = RealOs{}
+		c.osInterface = RealOs{}
 	}
 
-	apiURL, inv := config(o)
+}
+
+func (c *Client) Configure() {
+	c.ensureInterface()
+
+	apiURL, inv := config(c.osInterface)
 
 	c.apiURL = apiURL
 	c.inventory = inv
-
 }
 
 func (c *Client) ReadResource(resourceName string) []byte {
@@ -76,19 +117,21 @@ func (c *Client) ReadResource(resourceName string) []byte {
 	url := getUrl(c.apiURL, c.inventory, resourceName)
 
 	// prepare request
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 
 	// send request
-	resp, err := client.Do(req)
+	resp, err := c.osInterface.HttpDo(req)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println(resp)
 
 	// read response
 	body, err := ioutil.ReadAll(resp.Body)
@@ -111,7 +154,7 @@ func keyInMap(m map[string]*json.RawMessage, key string) bool {
 
 func (c *Client) Output(command string) {
 
-	resourceName := resourceNameArg()
+	resourceName := resourceNameArg(c.osInterface)
 	data := c.ReadResource(resourceName)
 
 	var jsonRoot map[string]*json.RawMessage
@@ -136,9 +179,4 @@ func (c *Client) Output(command string) {
 		fmt.Println("{}")
 	}
 
-}
-
-func (c *Client) Resource(resourceName string) {
-	r := c.ReadResource(resourceName)
-	fmt.Printf("%s", r)
 }
