@@ -111,20 +111,6 @@ func keyInMap(m map[string]*json.RawMessage, key string) bool {
 }
 
 func (c *Client) Output(command string, resourceName string) string {
-	switch cmd := command; cmd {
-	case "ansible-inventory":
-		return c.AnsibleInventory(resourceName)
-	// case "salt-pillar":
-	// case "salt-top":
-	default:
-		log.Fatalf("Command %s is't supported", command)
-
-	}
-
-	return ""
-}
-
-func (c *Client) AnsibleInventory(resourceName string) string {
 
 	data := c.ReadResource(resourceName)
 
@@ -144,17 +130,29 @@ func (c *Client) AnsibleInventory(resourceName string) string {
 		log.Fatal(err)
 	}
 
-	// return ansible output
+	if command == "ansible-inventory" || command == "salt-pillar" {
 
-	if val, ok := hostRoot["parameters"]; ok {
-		fr, err := json.Marshal(val)
-		if err != nil {
-			log.Fatal("Unable to format host parameters")
+		if val, ok := hostRoot["parameters"]; ok {
+			fr, err := json.Marshal(val)
+			if err != nil {
+				log.Fatal("Unable to format host parameters")
+			}
+
+			return string(fr)
+		}
+	}
+
+	if command == "salt-top" {
+		if val, ok := hostRoot["applications"]; ok {
+			fr, err := json.Marshal(val)
+			if err != nil {
+				log.Fatal("Unable to format host parameters")
+			}
+
+			return fmt.Sprintf("{\"classes\": %s}", string(fr))
 		}
 
-		return string(fr)
-
-	} else {
-		return fmt.Sprintf("{}")
 	}
+
+	return fmt.Sprintf("{}")
 }

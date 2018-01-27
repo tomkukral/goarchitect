@@ -38,8 +38,6 @@ type TestOs struct {
 func (o TestOs) Getenv(name string) string {
 	var r string
 
-	fmt.Println(o)
-
 	if o.EmptyConfig {
 		r = ""
 	} else {

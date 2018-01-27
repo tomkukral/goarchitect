@@ -35,8 +35,6 @@ func TestConfig(t *testing.T) {
 
 	url, inv := config(testInterface)
 
-	fmt.Println(url, inv)
-
 	if url != "valueof:ARCHITECT_INVENTORY_API_URL" {
 		t.Errorf("Failed reading URL from env variable, got: %s", url)
 	}
@@ -121,8 +119,8 @@ func TestReadResource(t *testing.T) {
 	}
 
 	c.Configure()
-	res := c.ReadResource(rn)
-	fmt.Println(res)
+	c.ReadResource(rn)
+	// TODO: check outptu
 }
 
 func TestOutput(t *testing.T) {
