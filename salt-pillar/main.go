@@ -6,8 +6,5 @@ import (
 
 func main() {
 	cmd := "salt-pillar"
-
-	c := architect.Client{}
-	c.Configure(nil)
-	c.Output(cmd)
+	architect.RunCmd(cmd, nil)
 }
