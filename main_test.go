@@ -1,12 +1,11 @@
-package architect_client
+package goarchitect
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetUrl(t *testing.T) {
@@ -17,69 +16,15 @@ func TestGetUrl(t *testing.T) {
 	url := getUrl(apiUrl, inv, resourceName)
 	req := fmt.Sprintf(
 		"%s/inventory/v1/%s/%s/data.json?source=%s",
-		apiUrl, inv, resourceName, "salt-pillar",
+		apiUrl, inv, resourceName, "unknown",
 	)
+
+	assert.Equal(t, req, url, "Generated URL don't match")
 
 	if req != url {
 		t.Errorf("URL don't match. Required '%s', got '%s'", req, url)
 	}
 
-}
-
-type TestOs struct {
-	Args        []string
-	EmptyConfig bool
-	Status      string
-	Body        string
-}
-
-func (o TestOs) Getenv(name string) string {
-	var r string
-
-	fmt.Println(o)
-
-	if o.EmptyConfig {
-		r = ""
-	} else {
-		r = fmt.Sprintf("valueof:%s", name)
-	}
-
-	return r
-}
-
-func (o TestOs) FlagParse() {
-
-}
-func (o TestOs) FlagArgs() []string {
-	return o.Args
-}
-
-func (o TestOs) FlagArg(pos int) string {
-	return o.Args[pos]
-}
-
-func (o TestOs) LogFatal(v ...interface{}) {
-	o.Status = "log.Fatal"
-}
-
-func (o TestOs) HttpDo(req *http.Request) (*http.Response, error) {
-
-	header := make(http.Header, 0)
-	header.Add("Content-Type", "application/json")
-
-	t := &http.Response{
-		Status:        "200 OK",
-		StatusCode:    200,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Body:          ioutil.NopCloser(bytes.NewBufferString(o.Body)),
-		ContentLength: int64(len(o.Body)),
-		Request:       req,
-		Header:        header,
-	}
-
-	return t, nil
 }
 
 var testInterface = TestOs{
@@ -115,15 +60,6 @@ func TestConfigEmpty(t *testing.T) {
 	if inv != defaultInv {
 		t.Errorf("Failed reading inventory from env variable, got: %s", url)
 	}
-}
-
-func TestResourceNameArg(t *testing.T) {
-	r := resourceNameArg(testInterface)
-
-	if r != testInterface.Args[0] {
-		t.Errorf("Failed reading args, got: %s, expected: %s", r, testInterface.Args[0])
-	}
-
 }
 
 func TestClient(t *testing.T) {
@@ -207,10 +143,7 @@ func TestOutput(t *testing.T) {
 		Body:        rb,
 	}
 
-	c := Client{osInterface: ti}
-	c.Configure()
-
-	fmt.Println(c)
-
-	RunCmd("salt-pillar", ti)
+	printed := RunCmd("ansible-inventory", sn, ti)
+	req := `{}`
+	assert.Equal(t, req, printed, "Returned unexpected output")
 }
