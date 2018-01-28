@@ -13,6 +13,8 @@ const env_inv string = "ARCHITECT_INVENTORY_NAME"
 const defaultUrl string = "https://localhost:8181"
 const defaultInv string = "default"
 
+var version = "master"
+
 type OsInterface interface {
 	Getenv(name string) string
 	LogFatal(v ...interface{})
