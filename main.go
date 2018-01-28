@@ -15,6 +15,8 @@ const (
 	defaultInv string = "default"
 )
 
+var version = "master"
+
 type OsInterface interface {
 	Getenv(name string) string
 	LogFatal(v ...interface{})
