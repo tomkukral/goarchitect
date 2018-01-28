@@ -5,3 +5,4 @@ salt-pillar/salt-pillar
 
 vendor/
 dist/
+github_token
