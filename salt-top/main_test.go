@@ -32,7 +32,7 @@ func TestPrintParameters(t *testing.T) {
 
 	main()
 
-	req := `{"param1":"value1","param2":"value2"}`
+	req := `{"classes": ["ntp"]}`
 
 	printed := out.(*bytes.Buffer).String()
 

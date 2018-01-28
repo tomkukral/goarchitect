@@ -1,13 +1,11 @@
-package architect_client
+package goarchitect
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 )
 
 const env_url string = "ARCHITECT_INVENTORY_API_URL"
@@ -15,43 +13,13 @@ const env_inv string = "ARCHITECT_INVENTORY_NAME"
 const defaultUrl string = "https://localhost:8181"
 const defaultInv string = "default"
 
-type osInterface interface {
+type OsInterface interface {
 	Getenv(name string) string
-	FlagParse()
-	FlagArgs() []string
-	FlagArg(pos int) string
 	LogFatal(v ...interface{})
 	HttpDo(req *http.Request) (*http.Response, error)
 }
 
-type RealOs struct {
-}
-
-func (o RealOs) Getenv(name string) string {
-	return os.Getenv(name)
-}
-func (o RealOs) FlagParse() {
-	flag.Parse()
-}
-func (o RealOs) FlagArgs() []string {
-	return flag.Args()
-}
-
-func (o RealOs) FlagArg(pos int) string {
-	return flag.Arg(pos)
-}
-
-func (o RealOs) LogFatal(v ...interface{}) {
-	log.Fatal(v)
-}
-
-func (o RealOs) HttpDo(req *http.Request) (*http.Response, error) {
-	client := &http.Client{}
-
-	return client.Do(req)
-}
-
-func config(o osInterface) (string, string) {
+func config(o OsInterface) (string, string) {
 	url := o.Getenv(env_url)
 	if url == "" {
 		url = defaultUrl
@@ -65,35 +33,27 @@ func config(o osInterface) (string, string) {
 	return url, inv
 }
 
-func resourceNameArg(o osInterface) string {
-	o.FlagParse()
-
-	if len(o.FlagArgs()) < 1 {
-		o.LogFatal("Missing resource name parameter")
-	}
-
-	return o.FlagArg(0)
-}
-
 func getUrl(apiUrl, inv, resourceName string) string {
 	return fmt.Sprintf(
 		"%s/inventory/v1/%s/%s/data.json?source=%s",
-		apiUrl, inv, resourceName, "salt-pillar",
+		apiUrl, inv, resourceName, "unknown",
 	)
 
 	// resource names: ansible-inventory, salt-pillar, salt-top
 }
 
-func RunCmd(cmd string, o osInterface) {
-	c := Client{osInterface: o}
+func RunCmd(cmd string, hostname string, o OsInterface) string {
+	c := Client{hostname: hostname, osInterface: o}
 	c.Configure()
-	c.Output(cmd)
+
+	return c.Output(cmd, hostname)
 }
 
 type Client struct {
+	hostname    string
 	apiURL      string
 	inventory   string
-	osInterface osInterface
+	osInterface OsInterface
 }
 
 func (c *Client) ensureInterface() {
@@ -131,8 +91,6 @@ func (c *Client) ReadResource(resourceName string) []byte {
 		log.Fatal(err)
 	}
 
-	fmt.Println(resp)
-
 	// read response
 	body, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -152,9 +110,8 @@ func keyInMap(m map[string]*json.RawMessage, key string) bool {
 	return false
 }
 
-func (c *Client) Output(command string) {
+func (c *Client) Output(command string, resourceName string) string {
 
-	resourceName := resourceNameArg(c.osInterface)
 	data := c.ReadResource(resourceName)
 
 	var jsonRoot map[string]*json.RawMessage
@@ -173,10 +130,29 @@ func (c *Client) Output(command string) {
 		log.Fatal(err)
 	}
 
-	if val, ok := hostRoot["parameters"]; ok {
-		fmt.Printf("%s\n", *val)
-	} else {
-		fmt.Println("{}")
+	if command == "ansible-inventory" || command == "salt-pillar" {
+
+		if val, ok := hostRoot["parameters"]; ok {
+			fr, err := json.Marshal(val)
+			if err != nil {
+				log.Fatal("Unable to format host parameters")
+			}
+
+			return string(fr)
+		}
 	}
 
+	if command == "salt-top" {
+		if val, ok := hostRoot["applications"]; ok {
+			fr, err := json.Marshal(val)
+			if err != nil {
+				log.Fatal("Unable to format host parameters")
+			}
+
+			return fmt.Sprintf("{\"classes\": %s}", string(fr))
+		}
+
+	}
+
+	return fmt.Sprintf("{}")
 }

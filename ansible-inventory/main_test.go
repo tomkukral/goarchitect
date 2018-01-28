@@ -10,18 +10,17 @@ import (
 )
 
 func TestPrintParameters(t *testing.T) {
-	host = "server.name"
+	host := "server.name"
 	tpl := `{
 		"%s": {
 			"parameters": {
 				"param1": "value1",
 				"param2": "value2"
-			},
-			"applications": ["ntp"]
+			}
 		}
 	}`
 
-	osi = goarchitect.TestOs{
+	ti := goarchitect.TestOs{
 		EmptyConfig: true,
 		Body:        fmt.Sprintf(tpl, host),
 	}
@@ -30,8 +29,7 @@ func TestPrintParameters(t *testing.T) {
 	out = new(bytes.Buffer)
 	defer func() { out = bak }()
 
-	main()
-
+	printParameters(host, ti)
 	req := `{"param1":"value1","param2":"value2"}`
 
 	printed := out.(*bytes.Buffer).String()
