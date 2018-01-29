@@ -10,7 +10,7 @@ import (
 
 const env_url string = "ARCHITECT_INVENTORY_API_URL"
 const env_inv string = "ARCHITECT_INVENTORY_NAME"
-const defaultUrl string = "https://localhost:8181"
+const defaultUrl string = "http://localhost:8181"
 const defaultInv string = "default"
 
 var version = "master"
