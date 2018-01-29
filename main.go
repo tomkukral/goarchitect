@@ -21,6 +21,10 @@ type OsInterface interface {
 	HttpDo(req *http.Request) (*http.Response, error)
 }
 
+func Version() string {
+	return version
+}
+
 func config(o OsInterface) (string, string) {
 	url := o.Getenv(env_url)
 	if url == "" {
