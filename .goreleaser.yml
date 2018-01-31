@@ -1,19 +1,33 @@
 builds:
-  - binary: ansible-inventory
+  - binary: architect-ansible-inventory
     main: ansible-inventory/main.go
     goos:
       - linux
+      - windows
+      - darwin
     goarch:
       - amd64
-  - binary: salt-top
+  - binary: architect-salt-top
     main: ansible-inventory/main.go
     goos:
       - linux
+      - windows
+      - darwin
     goarch:
       - amd64
-  - binary: salt-pillar
+  - binary: architect-salt-pillar
     main: ansible-inventory/main.go
     goos:
       - linux
+      - windows
+      - darwin
     goarch:
       - amd64
+checksum:
+  name_template: "{{ .ProjectName }}-{{ .Tag }}-checksums.txt"
+sign:
+  artifacts: checksum
+archive:
+  name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+  replacements:
+    darwin: macOS

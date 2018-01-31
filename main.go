@@ -10,13 +10,19 @@ import (
 
 const env_url string = "ARCHITECT_INVENTORY_API_URL"
 const env_inv string = "ARCHITECT_INVENTORY_NAME"
-const defaultUrl string = "https://localhost:8181"
+const defaultUrl string = "http://localhost:8181"
 const defaultInv string = "default"
+
+var version = "master"
 
 type OsInterface interface {
 	Getenv(name string) string
 	LogFatal(v ...interface{})
 	HttpDo(req *http.Request) (*http.Response, error)
+}
+
+func Version() string {
+	return version
 }
 
 func config(o OsInterface) (string, string) {
@@ -34,10 +40,17 @@ func config(o OsInterface) (string, string) {
 }
 
 func getUrl(apiUrl, inv, resourceName string) string {
-	return fmt.Sprintf(
-		"%s/inventory/v1/%s/%s/data.json?source=%s",
-		apiUrl, inv, resourceName, "unknown",
-	)
+	if resourceName != "" {
+		return fmt.Sprintf(
+			"%s/inventory/v1/%s/%s/data.json?source=%s",
+			apiUrl, inv, resourceName, "unknown",
+		)
+	} else {
+		return fmt.Sprintf(
+			"%s/inventory/v1/%s/data.json?source=%s",
+			apiUrl, inv, "unknown",
+		)
+	}
 
 	// resource names: ansible-inventory, salt-pillar, salt-top
 }
@@ -90,6 +103,9 @@ func (c *Client) ReadResource(resourceName string) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if resp.StatusCode != 200 {
+		log.Fatalf("Server returned wrong status code: %d", resp.StatusCode)
+	}
 
 	// read response
 	body, err := ioutil.ReadAll(resp.Body)
@@ -110,6 +126,17 @@ func keyInMap(m map[string]*json.RawMessage, key string) bool {
 	return false
 }
 
+func mapKeys(m map[string]*json.RawMessage) []string {
+	// TODO: add tests
+	keys := make([]string, 0, len(m))
+
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
 func (c *Client) Output(command string, resourceName string) string {
 
 	data := c.ReadResource(resourceName)
@@ -118,6 +145,24 @@ func (c *Client) Output(command string, resourceName string) string {
 	err := json.Unmarshal(data, &jsonRoot)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if command == "ansible-inventory-list" {
+
+		type HostList struct {
+			All []string `json:"all"`
+		}
+
+		h := HostList{
+			All: mapKeys(jsonRoot),
+		}
+
+		jd, err := json.Marshal(h)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return fmt.Sprintf("%s", string(jd))
 	}
 
 	if !keyInMap(jsonRoot, resourceName) {
@@ -130,7 +175,7 @@ func (c *Client) Output(command string, resourceName string) string {
 		log.Fatal(err)
 	}
 
-	if command == "ansible-inventory" || command == "salt-pillar" {
+	if command == "ansible-inventory-host" || command == "salt-pillar" {
 
 		if val, ok := hostRoot["parameters"]; ok {
 			fr, err := json.Marshal(val)

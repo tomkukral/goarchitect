@@ -145,3 +145,15 @@ func TestOutput(t *testing.T) {
 	req := `{}`
 	assert.Equal(t, req, printed, "Returned unexpected output")
 }
+
+func TestMapKeys(t *testing.T) {
+	rm := json.RawMessage(`{"precomputed": true}`)
+	m := make(map[string]*json.RawMessage)
+
+	m["host1"] = &rm
+	m["host2"] = &rm
+
+	req := []string{"host1", "host2"}
+
+	assert.Equal(t, req, mapKeys(m), "Map keys mismatch")
+}
