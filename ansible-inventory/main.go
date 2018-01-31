@@ -11,6 +11,7 @@ import (
 )
 
 var out io.Writer = os.Stdout
+var osInt goarchitect.OsInterface = goarchitect.RealOs{}
 
 func main() {
 	// define command options
@@ -21,9 +22,10 @@ func main() {
 
 	// decide on command
 	if *list {
-		fmt.Fprintf(out, "{}")
+		cmd := "ansible-inventory-list"
+		fmt.Fprintf(out, goarchitect.RunCmd(cmd, "", osInt))
 	} else {
-		printParameters(*host, goarchitect.RealOs{})
+		printParameters(*host, osInt)
 	}
 
 }
@@ -33,6 +35,6 @@ func printParameters(host string, osInt goarchitect.OsInterface) {
 		log.Fatal("Missing host parameter, please set --host")
 	}
 
-	cmd := "ansible-inventory"
+	cmd := "ansible-inventory-host"
 	fmt.Fprintf(out, goarchitect.RunCmd(cmd, host, osInt))
 }
