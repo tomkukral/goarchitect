@@ -8,10 +8,12 @@ import (
 	"net/http"
 )
 
-const env_url string = "ARCHITECT_INVENTORY_API_URL"
-const env_inv string = "ARCHITECT_INVENTORY_NAME"
-const defaultUrl string = "https://localhost:8181"
-const defaultInv string = "default"
+const (
+	env_url    string = "ARCHITECT_INVENTORY_API_URL"
+	env_inv    string = "ARCHITECT_INVENTORY_NAME"
+	defaultUrl string = "https://localhost:8181"
+	defaultInv string = "default"
+)
 
 type OsInterface interface {
 	Getenv(name string) string

@@ -1,7 +1,18 @@
+workspace:
+  base: /go
+  path: src/github.com/cznewt/goarchitect
+
+matrix:
+  GO_VERSION:
+    - 1.8
+    - 1.9
+    - latest
+
 pipeline:
   build:
-    image: golang
+    image: "golang:${GO_VERSION}"
     commands:
       - go get
-      - go build
-      - go test ./...
+      - go get -u github.com/golang/dep/cmd/dep
+      - dep ensure
+      - go test -cover -race ./...
