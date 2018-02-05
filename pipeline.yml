@@ -20,10 +20,20 @@ jobs:
 
       image_resource:
         type: docker-image
-        source: {repository: golang, tag: 1.9-alpine}
+        source: {repository: golang, tag: 1.9}
 
       inputs:
       - name: code
+        path: gopath/src/github.com/tomkukral/goarchitect
 
       run:
-        path: code/test.sh
+        #dir: gopath/src/github.com/tomkukral/goarchitect/
+        path: sh
+        args:
+        - -exc
+        - |
+          export GOPATH=$(pwd)/gopath
+          env
+          find .
+          cd gopath/src/github.com/tomkukral/goarchitect/
+          ./test.sh
