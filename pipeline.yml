@@ -1,0 +1,29 @@
+---
+resources:
+- name: code
+  type: git
+  source:
+    uri: https://github.com/cznewt/goarchitect.git
+    branch: concourse
+
+jobs:
+- name: test
+  public: true
+  serial: true
+  plan:
+  - get: code
+    trigger: true
+
+  - task: test
+    config:
+      platform: linux
+
+      image_resource:
+        type: docker-image
+        source: {repository: golang, tag: 1.9-alpine}
+
+      inputs:
+      - name: code
+
+      run:
+        path: code/test.sh
