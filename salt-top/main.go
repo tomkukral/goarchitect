@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/cznewt/goarchitect"
+	"github.com/tomkukral/goarchitect"
 	"github.com/pborman/getopt"
 )
 
