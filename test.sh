@@ -2,7 +2,7 @@
 
 set -xe
 
-echo "GOPATH: ${GOPATH}"
+env
 
 go get
 go get -u github.com/golang/dep/cmd/dep
