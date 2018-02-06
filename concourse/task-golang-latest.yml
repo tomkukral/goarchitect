@@ -7,7 +7,7 @@ image_resource:
 
 inputs:
 - name: code
-  path: gopath/src/github.com/tomkukral/goarchitect
+  path: gopath/src/((package))
 
 run:
   path: sh
@@ -18,5 +18,5 @@ run:
     export PATH=$PATH:$(pwd)/gopath/bin/
     env
     find .
-    cd gopath/src/github.com/tomkukral/goarchitect/
+    cd gopath/src/((package))/
     ./test.sh

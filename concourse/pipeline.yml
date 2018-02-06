@@ -23,51 +23,8 @@ jobs:
 
   - aggregate:
     - task: test-latest
-      file: code/concourse/task-golang.yml
-    - task: test-1.8
-      config:
-        platform: linux
-
-        image_resource:
-          type: docker-image
-          source: {repository: golang, tag: 1.8}
-
-        inputs:
-        - name: code
-          path: gopath/src/github.com/tomkukral/goarchitect
-
-        run:
-          path: sh
-          args:
-          - -exc
-          - |
-            export GOPATH=$(pwd)/gopath
-            export PATH=$PATH:$(pwd)/gopath/bin/
-            env
-            find .
-            cd gopath/src/github.com/tomkukral/goarchitect/
-            ./test.sh
+      file: code/concourse/task-golang-latest.yml
     - task: test-1.9
-      config:
-        platform: linux
-
-        image_resource:
-          type: docker-image
-          source: {repository: golang, tag: 1.9}
-
-        inputs:
-        - name: code
-          path: gopath/src/github.com/tomkukral/goarchitect
-
-        run:
-          #dir: gopath/src/github.com/tomkukral/goarchitect/
-          path: sh
-          args:
-          - -exc
-          - |
-            export GOPATH=$(pwd)/gopath
-            export PATH=$PATH:$(pwd)/gopath/bin/
-            env
-            find .
-            cd gopath/src/github.com/tomkukral/goarchitect/
-            ./test.sh
+      file: code/concourse/task-golang-1.8.yml
+    - task: test-1.8
+      file: code/concourse/task-golang-1.9.yml

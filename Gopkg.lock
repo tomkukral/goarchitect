@@ -25,9 +25,15 @@
   revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
   version = "v1.2.0"
 
+[[projects]]
+  name = "github.com/tomkukral/goarchitect"
+  packages = ["."]
+  revision = "5d272cba7bf2904c0460d188ef62d8880cc76ee7"
+  version = "v0.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "eb9d0da50c1a19bfd214af0c1a8fae7d6f35aba2b8c129d6ba15bdfa2398ec88"
+  inputs-digest = "160140a76ea1515aad671d570a245385118048da0ddb25250a32e859ebd8edc5"
   solver-name = "gps-cdcl"
   solver-version = 1
